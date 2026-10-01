@@ -1,0 +1,27 @@
+[project]
+name = "registration-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aio-pika>=10.1.0",
+    "aiologger>=0.7.0",
+    "fastapi>=0.142.2",
+    "fastapi-limiter>=0.2.0",
+    "pydantic[email]>=2.13.5",
+    "sqlalchemy>=2.1.1",
+    "uv>=0.12.21",
+    "uvicorn>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "alembic>=1.20.0",
+    "black>=26.5.1",
+    "mypy>=2.3.1",
+]
+test = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
