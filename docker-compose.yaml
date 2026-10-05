@@ -1,0 +1,6 @@
+services:
+  registration_service:
+    build: .
+    container_name: registration_service
+    ports:
+      - "${SERVICE_PORT}:${SERVICE_PORT}"
