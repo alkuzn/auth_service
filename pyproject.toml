@@ -1,7 +1,7 @@
 [project]
-name = "registration-service"
+name = "auth-service"
 version = "0.1.0"
-description = "Сервис регистрации пользователей"
+description = "Сервис регистрации авторизации пользователей"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -33,7 +33,7 @@ test = [
 ]
 
 [tool.uv.sources]
-registration-service = { workspace = true }
+auth-service = { workspace = true }
 
 [build-system] 
 requires = ["uv_build>=0.6.5,<0.7.0"] 

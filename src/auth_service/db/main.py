@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from registration_service.config import settings
+from auth_service.config import settings
 
 
 class Base(DeclarativeBase):

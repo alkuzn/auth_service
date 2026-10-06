@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     @property
     def uvicorn_settings(self) -> dict:
         return {
-            "app": "registration_service:app",
+            "app": "auth_service:app",
             "reload": True,
             "host": self.app_host,
             "port": self.app_port,
