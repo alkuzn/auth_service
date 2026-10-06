@@ -1,37 +1,46 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv(".env")
+from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
-class Config:
-    db_asyncdriver = "postgresql+asyncpg"
-    db_syncdriver = "postgresql+psycopg"
-    docs_url = os.getenv("DOCS_URL", None)
-    redoc_url = os.getenv("REDOC_URL", None)
-    openapi_url = os.getenv("OPENAPI_URL", None)
-    uvicorn_settings = {
-        "app": "registration_service:app",
-        "reload": True,
-        "host": os.getenv("SERVICE_HOST", "0.0.0.0"),
-        "port": int(os.getenv("SERVICE_PORT", 8000)),
-    }
+class Settings(BaseSettings):
+    db_host: str = Field(env="DB_HOST")
+    db_port: int = Field(env="DB_PORT")
+    db_name: str = Field(env="DB_NAME")
+    db_user: str = Field(env="DB_USER")
+    db_password: str = Field(env="DB_PASSWORD")
 
-    def __init__(self):
-        # self.db_host=os.getenv("DB_HOST")
-        self.db_host = "localhost"
-        self.db_name = "reg_service_db"
-        self.db_user = "reg_service"
-        self.db_password = "123"
-        self.db_port = 5432
+    db_driver_async: str = Field(default="postgresql+asyncpg")
+    db_driver_sync: str = Field(default="postgresql+psycopg")
+
+    docs_url: str | None = Field(env="DOCS_URL", default=None)
+    redoc_url: str | None = Field(env="REDOC_URL", default=None)
+    openapi_url: str | None = Field(env="OPENAPI_URL", default=None)
+    app_host: str = Field(env="APP_HOST", default="localhost")
+    app_port: int = Field(env="APP_PORT", default=8000)
 
     def __db_url_(self, driver):
         return f"{driver}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
 
     @property
-    def db_asyncurl(self):
-        return self._Config__db_url_(self.db_asyncdriver)
+    def uvicorn_settings(self) -> dict:
+        return {
+            "app": "registration_service:app",
+            "reload": True,
+            "host": self.app_host,
+            "port": self.app_port,
+        }
 
     @property
-    def db_syncurl(self):
-        return self._Config__db_url_(self.db_syncdriver)
+    def db_asyncurl(self) -> str:
+        return self._Settings__db_url_(self.db_driver_sync)
+
+    @property
+    def db_syncurl(self) -> str:
+        return self._Settings__db_url_(self.db_driver_async)
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+
+settings = Settings()

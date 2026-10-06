@@ -1,6 +1,6 @@
 import uvicorn
 
-from registration_service.config import Config
+from registration_service.config import settings
 
 if __name__ == "__main__":
-    uvicorn.run(**Config.uvicorn_settings)
+    uvicorn.run(**settings.uvicorn_settings)
