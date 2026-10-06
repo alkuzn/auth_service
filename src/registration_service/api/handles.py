@@ -8,9 +8,12 @@ from fastapi_limiter.depends import RateLimiter
 from pyrate_limiter import Duration, Limiter, Rate
 
 from aiologger.logger import Logger
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from registration_service.api import app
 from registration_service.schemes.schemes import RegisterData
+from registration_service.db import User, SessionMaker
 
 logger: Logger = Logger.with_default_handlers(name=__name__)
 
@@ -33,27 +36,30 @@ async def general_validation_handler(request: Request, ex: RequestValidationErro
     )
 
 
-async def is_email_used(email: str):
-    # Запрос к сервису
-    return email in ["test@mail.ru", "alex@gmail.com"]
+async def get_db():
+    async with SessionMaker() as sess:
+        yield sess
 
 
-async def send_code(email, code):
-    await logger.info(f"Код {code} отправлен в брокеру")
+async def email_exists(session: AsyncSession, email: str):
+    stmt = select(User.uuid).where(User.email == email)
+    result = await session.execute(stmt)
+    return result.scalar() is not None
 
 
 @app.post(
     "/start-registration",
     dependencies=[Depends(RateLimiter(limiter=Limiter(Rate(3, Duration.SECOND * 5))))],
 )
-async def start_registrations(
+async def start_registration(
     request: Request,
     bgtasks: BackgroundTasks,
     user_agent: Annotated[str, Header()],
     data: Annotated[RegisterData, Body()],
+    session: Annotated[AsyncSession, Depends(get_db)],
 ):
     try:
-        if await is_email_used(data.email):
+        if await email_exists(session, data.email):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Email уже используется."
             )
