@@ -12,5 +12,6 @@ upgrade:
 
 check:
 	$(UV_RUN_M) black src
+	
 sync:
 	$(PYTHON_RUN_M) uv sync
