@@ -11,7 +11,7 @@ from aiologger.logger import Logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from registration_service.api import app
+from registration_service.api import app, CodeCarrier
 from registration_service.schemes.schemes import RegisterData
 from registration_service.db import User, SessionMaker
 
@@ -71,5 +71,5 @@ async def start_registration(
 
     await logger.info(f"{request.url.path}; registration started; {user_agent}")
     code = int(random() // 0.0001)
-    bgtasks.add_task(send_code, data.email, code)
+    bgtasks.add_task(CodeCarrier.send_code, data.email, code)
     return {"success": True}

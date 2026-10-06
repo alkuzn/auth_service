@@ -1,4 +1,6 @@
 services:
+  auth_service:
     build: .
+    container_name: auth_service
     ports:
       - "${APP_PORT}:${APP_PORT}"

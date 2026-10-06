@@ -11,4 +11,4 @@ upgrade:
 	$(UV_RUN_M) alembic upgrade head
 
 check:
-	$(UV_RUN_M) black .
+	$(UV_RUN_M) black src
