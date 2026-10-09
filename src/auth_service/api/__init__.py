@@ -1,19 +1,73 @@
+import secrets
 from contextlib import asynccontextmanager
+from datetime import timedelta
 
-from fastapi import FastAPI
+import redis.asyncio as redis
+from aiologger import Logger
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from redis.exceptions import ConnectionError
+
+from auth_service.api.exceptions import DatabaseConnectionException
 from auth_service.api.func import CodeCarrier
+from auth_service.api.handles import router
 from auth_service.config import settings
+from auth_service.db.main import engine
+
+logger: Logger = Logger.with_default_handlers(name=__name__)
 
 
 @asynccontextmanager
 async def life(app: FastAPI):
+    app.state.jwt_key = "123"
+    app.state.jwt_timedelta = timedelta(days=1)
+    app.state.redis = redis.from_url(settings.redis.url, decode_responses=True)
+    app.state.code_carrier = CodeCarrier(app.state.redis)
+    try:
+        await app.state.redis.ping()
+    except ConnectionError as ex:
+        await logger.error(f"Ошибка подключения к redis: {str(ex)}")
     yield
+    await engine.dispose()  # Данные теряются?
 
 
 app = FastAPI(
     title="Auth service",
     lifespan=life,
-    docs_url=settings.docs_url,
-    redoc_url=settings.redoc_url,
-    openapi_url=settings.openapi_url,
+    **settings.fastapi.model_dump(),
 )
+
+app.include_router(router)
+
+
+@app.exception_handler(RequestValidationError)
+async def general_validation_handler(request: Request, ex: RequestValidationError):
+    for err in ex.errors():
+        match (err):
+            case {"type": "value_error", "loc": ("body", field_name)}:
+                msg = f"Невалидное поле {field_name}."
+            case {"type": "missing", "loc": ("body", field_name)}:
+                msg = f"Не указано поле {field_name}."
+            case _:
+                await logger.info(f"{request.state.id}; unknown error; data={err}")
+                msg = "Неизвестная ошибка"
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, content={"detail": msg}
+    )
+
+
+@app.exception_handler(DatabaseConnectionException)
+async def han(request: Request, ex: DatabaseConnectionException):
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=str(ex)
+    )
+
+
+@app.middleware("http")
+async def logger_mid(request: Request, callnext):
+    request_id = secrets.token_hex(10)
+    request.state.id = request_id
+    await logger.info(f"{request_id}; {request.headers['user-agent']}")
+    response = await callnext(request)
+    return response

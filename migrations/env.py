@@ -1,13 +1,11 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
-from src.registration_service.config import Config
-from src.registration_service.db import Base
+from auth_service.config import settings
+from auth_service.db import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -30,8 +28,7 @@ target_metadata = Base.metadata
 # ... etc.
 
 
-conf = Config()
-config.set_main_option("sqlalchemy.url", conf.db_syncurl)
+config.set_main_option("sqlalchemy.url", settings.db.syncurl)
 
 
 def run_migrations_offline() -> None:

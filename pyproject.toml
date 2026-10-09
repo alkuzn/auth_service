@@ -15,6 +15,7 @@ dependencies = [
     "psycopg-binary>=3.3.6",
     "pydantic-settings>=2.15.0",
     "pydantic[email]>=2.13.5",
+    "pyjwt>=2.15.1",
     "redis>=8.1.0",
     "sqlalchemy[asyncio]>=2.1.1",
     "uv>=0.12.21",
@@ -25,9 +26,11 @@ dependencies = [
 dev = [
     "alembic>=1.20.0",
     "black>=26.5.1",
+    "isort>=9.0.2",
     "mypy>=2.3.1",
 ]
 test = [
+    "httpx2>=2.13.1",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
 ]
